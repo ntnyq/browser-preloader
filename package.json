@@ -1,7 +1,7 @@
 {
   "name": "browser-preloader",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "packageManager": "pnpm@10.8.0",
   "description": "Preload resources in browser, e.g: images.",
   "keywords": [
