@@ -29,6 +29,7 @@
     "esbuild",
     "lcov",
     "pnpm",
+    "unrs",
     "vite",
     "vitepress",
     "vitest"

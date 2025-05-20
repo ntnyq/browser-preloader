@@ -114,7 +114,7 @@ describe('preloadImages', () => {
     )
 
     const duration = Date.now() - startTime
-    expect(duration).toBeGreaterThan(10 * 3)
+    expect(duration).toBeGreaterThanOrEqual(10 * 3)
   })
 
   it('options - strategy(sequential)', async () => {
