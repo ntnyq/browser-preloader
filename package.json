@@ -2,7 +2,7 @@
   "name": "browser-preloader",
   "type": "module",
   "version": "0.0.2",
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.15.1",
   "description": "Preload resources in browser, e.g: images.",
   "keywords": [
     "browser",
@@ -50,12 +50,12 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@ntnyq/eslint-config": "^5.4.1",
+    "@ntnyq/eslint-config": "^5.4.2",
     "@ntnyq/prettier-config": "^3.0.1",
     "@ntnyq/utils": "^0.9.1",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.3.1",
     "bumpp": "^10.2.3",
-    "eslint": "^9.34.0",
+    "eslint": "^9.35.0",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "nano-staged": "^0.8.0",
