@@ -56,9 +56,9 @@ describe('preloadImages', () => {
     })
 
     expect(onProgress).toHaveBeenCalledTimes(3)
-    expect(onProgress).toHaveBeenCalledWith(1, 3)
-    expect(onProgress).toHaveBeenCalledWith(2, 3)
-    expect(onProgress).toHaveBeenCalledWith(3, 3)
+    expect(onProgress).toHaveBeenCalledExactlyOnceWith(1, 3)
+    expect(onProgress).toHaveBeenCalledExactlyOnceWith(2, 3)
+    expect(onProgress).toHaveBeenCalledExactlyOnceWith(3, 3)
   })
 
   it('options - onError', async () => {
