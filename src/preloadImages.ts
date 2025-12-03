@@ -85,7 +85,6 @@ export async function preloadImages(
   } = options
 
   let loadedCount = 0
-  const loadedImages: HTMLImageElement[] = []
 
   function updateProgress() {
     onProgress?.(loadedCount, urls.length)
@@ -99,7 +98,7 @@ export async function preloadImages(
         image.crossOrigin = crossOriginAttribute
       }
 
-      let timer: ReturnType<typeof setTimeout>
+      let timer: ReturnType<typeof setTimeout> | undefined
 
       if (timeout > 0) {
         timer = setTimeout(() => {
@@ -112,15 +111,18 @@ export async function preloadImages(
       }
 
       image.onload = () => {
-        clearTimeout(timer)
+        if (timer !== undefined) {
+          clearTimeout(timer)
+        }
         loadedCount++
-        loadedImages.push(image)
         updateProgress()
         resolve(image)
       }
 
       image.onerror = () => {
-        clearTimeout(timer)
+        if (timer !== undefined) {
+          clearTimeout(timer)
+        }
         const error = new Error(`Failed to load image: ${url}`)
         onError?.(error, url)
         reject(error)
@@ -156,19 +158,14 @@ export async function preloadImages(
         const image = await loadImage(url)
         results.push(image)
       } catch {
-        // image has handled in loadImage
+        // Error has been handled in loadImage via onError callback
       }
     }
     return results
   }
 
-  try {
-    const resolvedImages =
-      strategy === 'parallel' ? await loadParallel() : await loadSequential()
-    onComplete?.(resolvedImages)
-    return resolvedImages
-  } catch {
-    onComplete?.(loadedImages)
-    return loadedImages
-  }
+  const resolvedImages =
+    strategy === 'parallel' ? await loadParallel() : await loadSequential()
+  onComplete?.(resolvedImages)
+  return resolvedImages
 }
