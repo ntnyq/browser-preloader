@@ -20,6 +20,22 @@ export interface PreloadImagesOptions {
   crossOriginAttribute?: 'anonymous' | 'use-credentials'
 
   /**
+   * Timeout for requestIdleCallback in milliseconds
+   * Only effective when loadOnIdle is true
+   *
+   * @default 2000
+   */
+  idleTimeout?: number
+
+  /**
+   * Whether to load images only when browser is idle
+   * Uses requestIdleCallback API if available
+   *
+   * @default false
+   */
+  loadOnIdle?: boolean
+
+  /**
    * Maximum number of concurrent image loads
    *
    * @default 6
@@ -76,6 +92,8 @@ export async function preloadImages(
   const {
     crossOrigin = false,
     crossOriginAttribute = 'anonymous',
+    idleTimeout = 2000,
+    loadOnIdle = false,
     maxConcurrent = 6,
     onComplete,
     onError,
@@ -132,6 +150,30 @@ export async function preloadImages(
     })
   }
 
+  async function loadWithIdle<T>(callback: () => Promise<T>): Promise<T> {
+    if (
+      !loadOnIdle
+      || typeof window === 'undefined'
+      || window.requestIdleCallback === undefined
+    ) {
+      return callback()
+    }
+
+    return new Promise((resolve, reject) => {
+      window.requestIdleCallback(
+        async () => {
+          try {
+            const result = await callback()
+            resolve(result)
+          } catch (err) {
+            reject(err)
+          }
+        },
+        { timeout: idleTimeout },
+      )
+    })
+  }
+
   async function loadParallel(): Promise<HTMLImageElement[]> {
     const batches: string[][] = []
     const results: HTMLImageElement[] = []
@@ -142,8 +184,10 @@ export async function preloadImages(
     }
 
     for (const batch of batches) {
-      const batchPromises = batch.map(url => loadImage(url).catch(() => null))
-      const batchResults = await Promise.all(batchPromises)
+      const batchResults = await loadWithIdle(async () => {
+        const batchPromises = batch.map(url => loadImage(url).catch(() => null))
+        return Promise.all(batchPromises)
+      })
       results.push(...(batchResults.filter(Boolean) as HTMLImageElement[]))
     }
 
@@ -154,12 +198,14 @@ export async function preloadImages(
     const results: HTMLImageElement[] = []
 
     for (const url of urls) {
-      try {
-        const image = await loadImage(url)
-        results.push(image)
-      } catch {
-        // Error has been handled in loadImage via onError callback
-      }
+      await loadWithIdle(async () => {
+        try {
+          const image = await loadImage(url)
+          results.push(image)
+        } catch {
+          // Error has been handled in loadImage via onError callback
+        }
+      })
     }
     return results
   }

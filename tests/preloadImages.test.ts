@@ -3,9 +3,11 @@ import { preloadImages } from '../src'
 
 describe('preloadImages', () => {
   let originalImage: typeof Image
+  let originalRequestIdleCallback: typeof requestIdleCallback
 
   beforeEach(() => {
     originalImage = global.Image
+    originalRequestIdleCallback = global.requestIdleCallback
 
     global.Image = class MockImage {
       constructor() {
@@ -26,11 +28,26 @@ describe('preloadImages', () => {
       src: string = ''
     } as unknown as typeof Image
 
+    // Mock requestIdleCallback
+    global.requestIdleCallback = ((
+      callback: IdleRequestCallback,
+      _options?: IdleRequestOptions,
+    ) => {
+      const timeoutId = setTimeout(() => {
+        callback({
+          didTimeout: false,
+          timeRemaining: () => 50,
+        } as IdleDeadline)
+      }, 5)
+      return timeoutId as unknown as number
+    }) as typeof requestIdleCallback
+
     vi.restoreAllMocks()
   })
 
   afterEach(() => {
     global.Image = originalImage
+    global.requestIdleCallback = originalRequestIdleCallback
   })
 
   it('single image', async () => {
@@ -149,5 +166,67 @@ describe('preloadImages', () => {
 
     expect(onComplete).toHaveBeenCalledTimes(1)
     expect(onComplete.mock.calls[0][0]).toHaveLength(2)
+  })
+
+  it('options - loadOnIdle (with requestIdleCallback)', async () => {
+    const loaded = await preloadImages(['valid1.jpg', 'valid2.jpg'], {
+      idleTimeout: 1000,
+      loadOnIdle: true,
+    })
+
+    expect(loaded).toHaveLength(2)
+    expect(loaded[0].src).toContain('valid1.jpg')
+    expect(loaded[1].src).toContain('valid2.jpg')
+  })
+
+  it('options - loadOnIdle (without requestIdleCallback)', async () => {
+    const originalRIC = global.requestIdleCallback
+    // @ts-expect-error - testing undefined case
+    global.requestIdleCallback = undefined
+
+    const loaded = await preloadImages(['valid1.jpg', 'valid2.jpg'], {
+      loadOnIdle: true,
+    })
+
+    expect(loaded).toHaveLength(2)
+    global.requestIdleCallback = originalRIC
+  })
+
+  it('options - loadOnIdle with sequential strategy', async () => {
+    const loaded = await preloadImages(['valid1.jpg', 'valid2.jpg'], {
+      loadOnIdle: true,
+      strategy: 'sequential',
+    })
+
+    expect(loaded).toHaveLength(2)
+    expect(loaded[0].src).toBe('valid1.jpg')
+    expect(loaded[1].src).toBe('valid2.jpg')
+  })
+
+  it('options - loadOnIdle with parallel strategy', async () => {
+    const loaded = await preloadImages(
+      ['valid1.jpg', 'valid2.jpg', 'valid3.jpg', 'valid4.jpg'],
+      {
+        loadOnIdle: true,
+        maxConcurrent: 2,
+        strategy: 'parallel',
+      },
+    )
+
+    expect(loaded).toHaveLength(4)
+  })
+
+  it('options - loadOnIdle with onProgress callback', async () => {
+    const onProgress = vi.fn()
+
+    await preloadImages(['valid1.jpg', 'valid2.jpg', 'valid3.jpg'], {
+      loadOnIdle: true,
+      onProgress,
+    })
+
+    expect(onProgress).toHaveBeenCalledTimes(3)
+    expect(onProgress).toHaveBeenCalledWith(1, 3)
+    expect(onProgress).toHaveBeenCalledWith(2, 3)
+    expect(onProgress).toHaveBeenCalledWith(3, 3)
   })
 })

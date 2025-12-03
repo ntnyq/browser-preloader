@@ -26,24 +26,40 @@ pnpm add browser-preloader
 ```ts
 import { preloadImages } from 'browser-preloader'
 
-try {
-  const loadedImages = await preloadImages(['foo.jpg', 'bar.png'])
-  console.log(`Loaded ${loadedImages.length} images`)
-} catch (err) {
-  console.log(err)
-}
+// Basic usage
+const loadedImages = await preloadImages(['foo.jpg', 'bar.png'])
+console.log(`Loaded ${loadedImages.length} images`)
 
+// With callbacks
 preloadImages(['foo.jpg', 'bar.png'], {
   timeout: 5000,
   onProgress(loaded, total) {
     console.log(`Progress: ${loaded}/${total}`)
   },
   onComplete(images) {
-    console.log(`Successful loaded: ${images.length}`)
+    console.log(`Successfully loaded: ${images.length}`)
   },
   onError(err, url) {
     console.log(`Image ${url} failed to load`, err)
   },
+})
+
+// Load images when browser is idle
+preloadImages(['foo.jpg', 'bar.png'], {
+  loadOnIdle: true,
+  idleTimeout: 2000,
+})
+
+// Sequential loading with limited concurrency
+preloadImages(['foo.jpg', 'bar.png', 'baz.jpg'], {
+  strategy: 'sequential',
+  maxConcurrent: 2,
+})
+
+// With cross-origin support
+preloadImages(['https://example.com/image.jpg'], {
+  crossOrigin: true,
+  crossOriginAttribute: 'anonymous',
 })
 ```
 
@@ -82,7 +98,7 @@ export interface PreloadImagesOptions {
    *
    * @default false
    */
-  crossOrigin?: string
+  crossOrigin?: boolean
 
   /**
    * The cross-origin attribute to use for the image
@@ -90,6 +106,22 @@ export interface PreloadImagesOptions {
    * @default `anonymous`
    */
   crossOriginAttribute?: 'anonymous' | 'use-credentials'
+
+  /**
+   * Timeout for requestIdleCallback in milliseconds
+   * Only effective when loadOnIdle is true
+   *
+   * @default 2000
+   */
+  idleTimeout?: number
+
+  /**
+   * Whether to load images only when browser is idle
+   * Uses requestIdleCallback API if available
+   *
+   * @default false
+   */
+  loadOnIdle?: boolean
 
   /**
    * Maximum number of concurrent image loads
