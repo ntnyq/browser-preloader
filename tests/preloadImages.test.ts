@@ -10,6 +10,10 @@ describe('preloadImages', () => {
     originalRequestIdleCallback = global.requestIdleCallback
 
     global.Image = class MockImage {
+      crossOrigin: string = ''
+      onerror: (() => void) | null = null
+      onload: (() => void) | null = null
+      src: string = ''
       constructor() {
         setTimeout(() => {
           if (this.src.includes('valid')) {
@@ -22,10 +26,6 @@ describe('preloadImages', () => {
           }
         }, 10)
       }
-      crossOrigin: string = ''
-      onerror: (() => void) | null = null
-      onload: (() => void) | null = null
-      src: string = ''
     } as unknown as typeof Image
 
     // Mock requestIdleCallback

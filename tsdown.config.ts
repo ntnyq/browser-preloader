@@ -4,6 +4,7 @@ export default defineConfig({
   clean: true,
   dts: true,
   entry: ['src/index.ts'],
-  noExternal: ['@ntnyq/utils'],
+  inlineOnly: ['@ntnyq/utils'],
+  minify: 'dce-only',
   platform: 'browser',
 })

@@ -152,9 +152,9 @@ export async function preloadImages(
 
   async function loadWithIdle<T>(callback: () => Promise<T>): Promise<T> {
     if (
-      !loadOnIdle
-      || typeof window === 'undefined'
-      || window.requestIdleCallback === undefined
+      !loadOnIdle ||
+      typeof window === 'undefined' ||
+      window.requestIdleCallback === undefined
     ) {
       return callback()
     }

@@ -2,7 +2,7 @@
   "name": "browser-preloader",
   "type": "module",
   "version": "0.1.0",
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.28.2",
   "description": "Preload resources in browser, e.g: images.",
   "keywords": [
     "browser",
@@ -39,32 +39,35 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "lint": "eslint",
     "prepare": "husky",
     "prepublishOnly": "pnpm run build",
     "release": "run-s release:check release:version",
-    "release:check": "run-s lint typecheck test",
+    "release:check": "run-s format:check lint typecheck test",
     "release:version": "bumpp",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit"
   },
   "devDependencies": {
-    "@ntnyq/eslint-config": "^5.9.0",
-    "@ntnyq/prettier-config": "^3.0.1",
+    "@ntnyq/eslint-config": "^6.0.0-beta.7",
     "@ntnyq/utils": "^0.11.0",
-    "@types/node": "^24.10.9",
-    "bumpp": "^10.4.0",
+    "@types/node": "^25.2.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260205.1",
+    "bumpp": "^10.4.1",
     "eslint": "^9.39.2",
     "husky": "^9.1.7",
-    "jsdom": "^27.4.0",
+    "jsdom": "^28.0.0",
     "nano-staged": "^0.9.0",
     "npm-run-all2": "^8.0.4",
-    "prettier": "^3.8.0",
-    "tsdown": "^0.19.0",
+    "oxfmt": "^0.28.0",
+    "tsdown": "^0.20.3",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   },
   "nano-staged": {
-    "*.{js,ts,mjs,cjs,md,yml,yaml,json}": "eslint --fix"
+    "*.{js,ts,mjs,tsx,md,yml,yaml,json}": "eslint --fix",
+    "*": "oxfmt --no-error-on-unmatched-pattern"
   }
 }
