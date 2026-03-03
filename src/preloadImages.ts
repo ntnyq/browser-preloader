@@ -116,6 +116,7 @@ export async function preloadImages(
         image.crossOrigin = crossOriginAttribute
       }
 
+      // oxlint-disable-next-line init-declarations
       let timer: ReturnType<typeof setTimeout> | undefined
 
       if (timeout > 0) {
@@ -165,8 +166,8 @@ export async function preloadImages(
           try {
             const result = await callback()
             resolve(result)
-          } catch (err) {
-            reject(err)
+          } catch (error) {
+            reject(error)
           }
         },
         { timeout: idleTimeout },

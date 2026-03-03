@@ -5,7 +5,12 @@
   "bracketSpacing": true,
   "embeddedLanguageFormatting": "auto",
   "endOfLine": "lf",
-  "experimentalSortPackageJson": false,
+  "sortPackageJson": {
+    "sortScripts": true
+  },
+  "sortImports": {
+    "newlinesBetween": false
+  },
   "htmlWhitespaceSensitivity": "css",
   "ignorePatterns": [
     "**/node_modules/**",

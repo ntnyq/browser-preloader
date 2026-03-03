@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { preloadImages } from '../src'
 
-describe('preloadImages', () => {
+describe(preloadImages, () => {
+  // oxlint-disable-next-line init-declarations
   let originalImage: typeof Image
+  // oxlint-disable-next-line init-declarations
   let originalRequestIdleCallback: typeof requestIdleCallback
 
   beforeEach(() => {
@@ -10,10 +12,10 @@ describe('preloadImages', () => {
     originalRequestIdleCallback = global.requestIdleCallback
 
     global.Image = class MockImage {
-      crossOrigin: string = ''
+      crossOrigin = ''
       onerror: (() => void) | null = null
       onload: (() => void) | null = null
-      src: string = ''
+      src = ''
       constructor() {
         setTimeout(() => {
           if (this.src.includes('valid')) {
@@ -84,7 +86,7 @@ describe('preloadImages', () => {
 
     expect(loaded).toHaveLength(1)
     expect(loaded[0].src).toContain('valid.jpg')
-    expect(onError).toHaveBeenCalledTimes(1)
+    expect(onError).toHaveBeenCalledOnce()
     expect(onError.mock.calls[0][0]).toBeInstanceOf(Error)
     expect(onError.mock.calls[0][1]).toContain('error.jpg')
   })
@@ -97,7 +99,7 @@ describe('preloadImages', () => {
     })
 
     expect(images).toHaveLength(0)
-    expect(onError).toHaveBeenCalledTimes(1)
+    expect(onError).toHaveBeenCalledOnce()
     expect(onError.mock.calls[0][0].message).toContain('Image load timeout')
   })
 
@@ -164,7 +166,7 @@ describe('preloadImages', () => {
     const onComplete = vi.fn()
     await preloadImages(['valid1.jpg', 'valid2.jpg'], { onComplete })
 
-    expect(onComplete).toHaveBeenCalledTimes(1)
+    expect(onComplete).toHaveBeenCalledOnce()
     expect(onComplete.mock.calls[0][0]).toHaveLength(2)
   })
 
