@@ -7,7 +7,15 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
   },
-  "typescript.experimental.useTsgo": true,
-  "cSpell.words": ["bumpp", "changelogithub", "oxfmt", "oxlint", "tsgo"],
+  "cSpell.words": [
+    "bumpp",
+    "changelogithub",
+    "esbuild",
+    "oxfmt",
+    "oxlint",
+    "tsdown",
+    "tsgo",
+    "vitest"
+  ],
   "cSpell.allowCompoundWords": true
 }

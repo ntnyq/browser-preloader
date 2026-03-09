@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "@ntnyq/utils": "^0.11.0",
-    "@types/node": "^25.3.3",
-    "@typescript/native-preview": "^7.0.0-dev.20260303.1",
+    "@types/node": "^25.3.5",
+    "@typescript/native-preview": "^7.0.0-dev.20260308.1",
     "bumpp": "^10.4.1",
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
@@ -60,13 +60,12 @@
     "npm-run-all2": "^8.0.4",
     "oxfmt": "^0.36.0",
     "oxlint": "^1.51.0",
-    "tsdown": "^0.21.0-beta.3",
-    "typescript": "^5.9.3",
+    "tsdown": "^0.21.0",
     "vitest": "^4.0.18"
   },
   "nano-staged": {
     "*.{js,ts,mjs,tsx}": "oxlint --fix",
     "*": "oxfmt --no-error-on-unmatched-pattern"
   },
-  "packageManager": "pnpm@10.30.3"
+  "packageManager": "pnpm@10.31.0"
 }
