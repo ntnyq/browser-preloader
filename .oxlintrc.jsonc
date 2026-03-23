@@ -8,7 +8,7 @@
     "promise",
     "oxc",
     "typescript",
-    "unicorn"
+    "unicorn",
   ],
   "categories": {
     "correctness": "error",
@@ -17,15 +17,13 @@
     "perf": "warn",
     "style": "warn",
     "restriction": "warn",
-    "nursery": "warn"
+    "nursery": "warn",
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
   },
   "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/fixtures/**"],
-  "globals": {
-    "setTimeout": "readonly",
-    "window": "readonly",
-    "clearTimeout": "readonly",
-    "Image": "readonly"
-  },
   "rules": {
     "capitalized-comments": "off",
     "no-ternary": "off",
@@ -95,27 +93,27 @@
           "F",
           // Unused vars
           "_",
-          "$"
-        ]
-      }
+          "$",
+        ],
+      },
     ],
     "max-lines-per-function": [
       "warn",
       {
         "max": 200,
         "skipComments": true,
-        "skipBlankLines": true
-      }
+        "skipBlankLines": true,
+      },
     ],
     "max-statements": [
       "warn",
       {
-        "max": 50
-      }
+        "max": 50,
+      },
     ],
     "no-duplicate-imports": [
       "warn",
-      { "allowSeparateTypeImports": true, "includeExports": true }
+      { "allowSeparateTypeImports": true, "includeExports": true },
     ],
     "no-magic-numbers": [
       "warn",
@@ -124,9 +122,9 @@
         "ignoreArrayIndexes": true,
         "enforceConst": true,
         "detectObjects": false,
-        "ignoreDefaultValues": true
-      }
-    ]
+        "ignoreDefaultValues": true,
+      },
+    ],
   },
   "overrides": [
     {
@@ -134,15 +132,20 @@
       "rules": {
         "import/no-nodejs-modules": "off",
         "import/prefer-default-export": "off",
-        "import/no-named-export": "off"
-      }
+        "import/no-named-export": "off",
+      },
     },
     {
       "files": ["**/*.config.{ts,mjs}"],
       "rules": {
         "new-cap": "off",
-        "import/no-default-export": "off"
-      }
+        "sort-keys": [
+          "warn",
+          "asc",
+          { "caseSensitive": true, "natural": true },
+        ],
+        "import/no-default-export": "off",
+      },
     },
     {
       "files": ["*.d.ts"],
@@ -153,15 +156,15 @@
         "typescript/no-empty-object-type": "off",
         "typescript/no-explicit-any": "off",
         // we need `export {}` to convert a file to a module
-        "unicorn/require-module-specifiers": "off"
-      }
+        "unicorn/require-module-specifiers": "off",
+      },
     },
     {
       "files": ["*.{spec,test}.{js,ts,tsx}", "*.{spec,test}-d.{ts,tsx}"],
       "plugins": ["vitest"],
       "globals": {
         "global": "writable",
-        "requestIdleCallback": "readonly"
+        "requestIdleCallback": "readonly",
       },
       "rules": {
         "id-length": "off",
@@ -178,8 +181,8 @@
         "typescript/prefer-ts-expect-error": "off",
         "typescript/require-array-sort-compare": "off",
         "vitest/prefer-called-times": "off",
-        "vitest/no-importing-vitest-globals": "off"
-      }
-    }
-  ]
+        "vitest/no-importing-vitest-globals": "off",
+      },
+    },
+  ],
 }
