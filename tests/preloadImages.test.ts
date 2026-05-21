@@ -12,11 +12,11 @@ describe(preloadImages, () => {
     originalRequestIdleCallback = global.requestIdleCallback
 
     global.Image = class MockImage {
-      crossOrigin = ''
-      onerror: (() => void) | null = null
-      onload: (() => void) | null = null
-      src = ''
-      constructor() {
+      public crossOrigin = ''
+      public onerror: (() => void) | null = null
+      public onload: (() => void) | null = null
+      public src = ''
+      public constructor() {
         setTimeout(() => {
           if (this.src.includes('valid')) {
             this.onload?.()
@@ -144,7 +144,7 @@ describe(preloadImages, () => {
       },
     )
 
-    expect(loaded.map(v => v.src)).toEqual([
+    expect(loaded.map(v => v.src)).toStrictEqual([
       'valid1.jpg',
       'valid2.jpg',
       'valid3.jpg',
