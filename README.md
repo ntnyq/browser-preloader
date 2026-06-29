@@ -54,10 +54,15 @@ preloadImages(['foo.jpg', 'bar.png'], {
   idleTimeout: 2000,
 })
 
-// Sequential loading with limited concurrency
+// Parallel loading with limited concurrency
+preloadImages(['foo.jpg', 'bar.png', 'baz.jpg'], {
+  maxConcurrent: 2,
+  strategy: 'parallel',
+})
+
+// Sequential loading
 preloadImages(['foo.jpg', 'bar.png', 'baz.jpg'], {
   strategy: 'sequential',
-  maxConcurrent: 2,
 })
 
 // With cross-origin support
@@ -89,22 +94,35 @@ controller.abort()
 
 - **Type**: `(images: string | string[], options: PreloadImagesOptions = {}) => Promise<HTMLImageElement[]>`
 
-Preload images in browser.
+Preload images in browser. The promise resolves with successfully loaded images.
 
-#### Parameters
+### preloadImagesSettled
 
-##### images
+- **Type**: `(images: string | string[], options: PreloadImagesOptions = {}) => Promise<PreloadImagesSettledResult>`
+
+Preload images in browser and return both successful images and failure details.
+
+### Parameters
+
+#### images
 
 - **Type**: `string | string[]`
 
 Array of image URLs or a single image URL.
 
-##### options
+#### options
 
 - **Type**: `PreloadImagesOptions`
 - **Required**: `false`
 
 Options for preloading images, see `PreloadImagesOptions` in [Interfaces](#interfaces).
+
+### Behavior Notes
+
+- Failed, timed out, or aborted images are omitted from `preloadImages` results.
+- Use `preloadImagesSettled` when you need `{ loaded, failed }`.
+- `maxConcurrent` only affects `strategy: 'parallel'`; sequential loading always processes one image at a time.
+- `signal` cancels pending image loads. Already loaded images remain in the returned result.
 
 ## Interfaces
 
