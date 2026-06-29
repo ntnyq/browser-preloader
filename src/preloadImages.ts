@@ -101,6 +101,11 @@ export async function preloadImages(
     strategy = 'parallel',
     timeout = 0,
   } = options
+  const safeMaxConcurrent =
+    Number.isFinite(maxConcurrent) && maxConcurrent > 0
+      ? Math.max(1, Math.floor(maxConcurrent))
+      : 1
+  const safeTimeout = Number.isFinite(timeout) && timeout > 0 ? timeout : 0
 
   let loadedCount = 0
 
@@ -111,6 +116,7 @@ export async function preloadImages(
   async function loadImage(url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image()
+      let isSettled = false
 
       if (crossOrigin) {
         image.crossOrigin = crossOriginAttribute
@@ -119,29 +125,50 @@ export async function preloadImages(
       // oxlint-disable-next-line init-declarations
       let timer: ReturnType<typeof setTimeout> | undefined
 
-      if (timeout > 0) {
-        timer = setTimeout(() => {
-          const error = new Error(
-            `Image load timeout after ${timeout}ms: ${url}`,
-          )
-          onError?.(error, url)
-          reject(error)
-        }, timeout)
-      }
-
-      image.onload = () => {
+      function clearTimer() {
         if (timer !== undefined) {
           clearTimeout(timer)
         }
+      }
+
+      function cleanup() {
+        clearTimer()
+        image.onload = null
+        image.onerror = null
+      }
+
+      if (safeTimeout > 0) {
+        timer = setTimeout(() => {
+          if (isSettled) {
+            return
+          }
+          isSettled = true
+          const error = new Error(
+            `Image load timeout after ${safeTimeout}ms: ${url}`,
+          )
+          cleanup()
+          onError?.(error, url)
+          reject(error)
+        }, safeTimeout)
+      }
+
+      image.onload = () => {
+        if (isSettled) {
+          return
+        }
+        isSettled = true
+        cleanup()
         loadedCount++
         updateProgress()
         resolve(image)
       }
 
       image.onerror = () => {
-        if (timer !== undefined) {
-          clearTimeout(timer)
+        if (isSettled) {
+          return
         }
+        isSettled = true
+        cleanup()
         const error = new Error(`Failed to load image: ${url}`)
         onError?.(error, url)
         reject(error)
@@ -174,8 +201,8 @@ export async function preloadImages(
     const batches: string[][] = []
     const results: HTMLImageElement[] = []
 
-    for (let i = 0; i < urls.length; i += maxConcurrent) {
-      const batch = urls.slice(i, i + maxConcurrent)
+    for (let i = 0; i < urls.length; i += safeMaxConcurrent) {
+      const batch = urls.slice(i, i + safeMaxConcurrent)
       batches.push(batch)
     }
 

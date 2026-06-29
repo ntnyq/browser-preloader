@@ -103,6 +103,45 @@ describe(preloadImages, () => {
     expect(onError.mock.calls[0][0].message).toContain('Image load timeout')
   })
 
+  it('ignores late load events after timeout', async () => {
+    global.Image = class LateImage {
+      public crossOrigin = ''
+      public onerror: (() => void) | null = null
+      public onload: (() => void) | null = null
+      public src = ''
+
+      public constructor() {
+        setTimeout(() => {
+          this.onload?.()
+        }, 20)
+      }
+    } as unknown as typeof Image
+
+    const onError = vi.fn()
+    const onProgress = vi.fn()
+    const images = await preloadImages(['late.jpg'], {
+      onError,
+      onProgress,
+      timeout: 5,
+    })
+
+    await new Promise(resolve => {
+      setTimeout(resolve, 30)
+    })
+
+    expect(images).toHaveLength(0)
+    expect(onError).toHaveBeenCalledOnce()
+    expect(onProgress).not.toHaveBeenCalled()
+  })
+
+  it('treats invalid maxConcurrent as one concurrent load', async () => {
+    const images = await preloadImages(['valid1.jpg', 'valid2.jpg'], {
+      maxConcurrent: Number.NaN,
+    })
+
+    expect(images).toHaveLength(2)
+  })
+
   it('options - crossOrigin', async () => {
     const images = await preloadImages('valid.jpg', {
       crossOrigin: true,
