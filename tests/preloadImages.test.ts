@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { preloadImages } from '../src'
+import { preloadImages, preloadImagesSettled } from '../src'
 
 describe(preloadImages, () => {
   // oxlint-disable-next-line init-declarations
@@ -344,5 +344,50 @@ describe(preloadImages, () => {
       expect.objectContaining({ name: 'AbortError' }),
       expect.stringContaining('valid-slow.jpg'),
     )
+  })
+})
+
+describe(preloadImagesSettled, () => {
+  // oxlint-disable-next-line init-declarations
+  let originalImage: typeof Image
+
+  beforeEach(() => {
+    originalImage = global.Image
+
+    global.Image = class MockImage {
+      public crossOrigin = ''
+      public onerror: (() => void) | null = null
+      public onload: (() => void) | null = null
+      public src = ''
+
+      public constructor() {
+        setTimeout(() => {
+          if (this.src.includes('valid')) {
+            this.onload?.()
+          } else {
+            this.onerror?.()
+          }
+        }, 10)
+      }
+    } as unknown as typeof Image
+
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    global.Image = originalImage
+  })
+
+  it('returns loaded images and failed image details', async () => {
+    const onError = vi.fn()
+    const result = await preloadImagesSettled(['valid.jpg', 'error.jpg'], {
+      onError,
+    })
+
+    expect(result.loaded).toHaveLength(1)
+    expect(result.failed).toHaveLength(1)
+    expect(result.failed[0].url).toBe('error.jpg')
+    expect(result.failed[0].error).toBeInstanceOf(Error)
+    expect(onError).toHaveBeenCalledOnce()
   })
 })

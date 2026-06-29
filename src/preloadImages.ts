@@ -83,6 +83,16 @@ export interface PreloadImagesOptions {
   onProgress?: (loadedCount: number, totalCount: number) => void
 }
 
+export interface PreloadImageFailure {
+  error: Error
+  url: string
+}
+
+export interface PreloadImagesSettledResult {
+  failed: PreloadImageFailure[]
+  loaded: HTMLImageElement[]
+}
+
 function createAbortError(url: string): Error {
   const error = new Error(`Image load aborted: ${url}`)
   error.name = 'AbortError'
@@ -267,4 +277,20 @@ export async function preloadImages(
     strategy === 'parallel' ? await loadParallel() : await loadSequential()
   onComplete?.(resolvedImages)
   return resolvedImages
+}
+
+export async function preloadImagesSettled(
+  images: Arrayable<string>,
+  options: PreloadImagesOptions = {},
+): Promise<PreloadImagesSettledResult> {
+  const failed: PreloadImageFailure[] = []
+  const loaded = await preloadImages(images, {
+    ...options,
+    onError(error, url) {
+      failed.push({ error, url })
+      options.onError?.(error, url)
+    },
+  })
+
+  return { failed, loaded }
 }

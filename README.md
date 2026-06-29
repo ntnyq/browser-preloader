@@ -24,11 +24,15 @@ pnpm add browser-preloader
 ## Usage
 
 ```ts
-import { preloadImages } from 'browser-preloader'
+import { preloadImages, preloadImagesSettled } from 'browser-preloader'
 
 // Basic usage
 const loadedImages = await preloadImages(['foo.jpg', 'bar.png'])
 console.log(`Loaded ${loadedImages.length} images`)
+
+// Collect successful images and failure details
+const result = await preloadImagesSettled(['foo.jpg', 'missing.png'])
+console.log(result.loaded, result.failed)
 
 // With callbacks
 preloadImages(['foo.jpg', 'bar.png'], {
@@ -178,6 +182,16 @@ export interface PreloadImagesOptions {
    * Signal for canceling pending image loads
    */
   signal?: AbortSignal
+}
+
+export interface PreloadImageFailure {
+  error: Error
+  url: string
+}
+
+export interface PreloadImagesSettledResult {
+  failed: PreloadImageFailure[]
+  loaded: HTMLImageElement[]
 }
 ```
 
