@@ -151,24 +151,19 @@ export async function preloadImages(
     })
   }
 
-  async function loadWithIdle<T>(callback: () => Promise<T>): Promise<T> {
+  async function loadWithIdle<T>(task: () => Promise<T>): Promise<T> {
     if (
       !loadOnIdle ||
       typeof window === 'undefined' ||
       window.requestIdleCallback === undefined
     ) {
-      return callback()
+      return task()
     }
 
     return new Promise((resolve, reject) => {
       window.requestIdleCallback(
-        async () => {
-          try {
-            const result = await callback()
-            resolve(result)
-          } catch (error) {
-            reject(error)
-          }
+        () => {
+          task().then(resolve).catch(reject)
         },
         { timeout: idleTimeout },
       )
