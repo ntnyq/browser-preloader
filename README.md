@@ -66,6 +66,13 @@ preloadImages(['https://example.com/image.jpg'], {
   crossOriginAttribute: 'anonymous',
 })
 
+// With browser image hints
+preloadImages(['hero.jpg'], {
+  decoding: 'async',
+  fetchPriority: 'high',
+  referrerPolicy: 'no-referrer',
+})
+
 // Cancel pending image loads
 const controller = new AbortController()
 
@@ -119,6 +126,16 @@ export interface PreloadImagesOptions {
    * @default `anonymous`
    */
   crossOriginAttribute?: 'anonymous' | 'use-credentials'
+
+  /**
+   * Image decoding hint
+   */
+  decoding?: HTMLImageElement['decoding']
+
+  /**
+   * Image fetch priority hint
+   */
+  fetchPriority?: HTMLImageElement['fetchPriority']
 
   /**
    * Timeout for requestIdleCallback in milliseconds
@@ -177,6 +194,11 @@ export interface PreloadImagesOptions {
    * @param totalCount - Total number of images to be loaded
    */
   onProgress?: (loadedCount: number, totalCount: number) => void
+
+  /**
+   * Image referrer policy
+   */
+  referrerPolicy?: HTMLImageElement['referrerPolicy']
 
   /**
    * Signal for canceling pending image loads

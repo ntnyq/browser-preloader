@@ -151,6 +151,18 @@ describe(preloadImages, () => {
     expect(images[0].crossOrigin).toBe('anonymous')
   })
 
+  it('options - native image attributes', async () => {
+    const images = await preloadImages('valid.jpg', {
+      decoding: 'async',
+      fetchPriority: 'high',
+      referrerPolicy: 'no-referrer',
+    })
+
+    expect(images[0].decoding).toBe('async')
+    expect(images[0].fetchPriority).toBe('high')
+    expect(images[0].referrerPolicy).toBe('no-referrer')
+  })
+
   it('options - maxConcurrent', async () => {
     const onProgress = vi.fn()
     const startTime = Date.now()
