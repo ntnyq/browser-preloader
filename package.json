@@ -1,6 +1,6 @@
 {
   "name": "browser-preloader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Preload resources in browser, e.g: images.",
   "keywords": [
     "browser",
