@@ -61,6 +61,15 @@ preloadImages(['https://example.com/image.jpg'], {
   crossOrigin: true,
   crossOriginAttribute: 'anonymous',
 })
+
+// Cancel pending image loads
+const controller = new AbortController()
+
+preloadImages(['foo.jpg', 'bar.png'], {
+  signal: controller.signal,
+})
+
+controller.abort()
 ```
 
 ## API
@@ -164,6 +173,11 @@ export interface PreloadImagesOptions {
    * @param totalCount - Total number of images to be loaded
    */
   onProgress?: (loadedCount: number, totalCount: number) => void
+
+  /**
+   * Signal for canceling pending image loads
+   */
+  signal?: AbortSignal
 }
 ```
 

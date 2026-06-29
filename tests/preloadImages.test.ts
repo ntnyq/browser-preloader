@@ -270,4 +270,79 @@ describe(preloadImages, () => {
     expect(onProgress).toHaveBeenCalledWith(2, 3)
     expect(onProgress).toHaveBeenCalledWith(3, 3)
   })
+
+  it('does not start image loads when signal is already aborted', async () => {
+    const controller = new AbortController()
+    controller.abort()
+
+    let imageCount = 0
+    global.Image = class CountingImage {
+      public crossOrigin = ''
+      public onerror: (() => void) | null = null
+      public onload: (() => void) | null = null
+      public src = ''
+
+      public constructor() {
+        imageCount++
+        setTimeout(() => {
+          this.onload?.()
+        }, 10)
+      }
+    } as unknown as typeof Image
+
+    const onComplete = vi.fn()
+    const images = await preloadImages(['valid.jpg'], {
+      onComplete,
+      signal: controller.signal,
+    })
+
+    expect(images).toHaveLength(0)
+    expect(imageCount).toBe(0)
+    expect(onComplete).toHaveBeenCalledWith([])
+  })
+
+  it('returns loaded images and reports pending images when aborted', async () => {
+    const loadDelays = [5, 30]
+
+    global.Image = class SlowImage {
+      public crossOrigin = ''
+      public onerror: (() => void) | null = null
+      public onload: (() => void) | null = null
+      public src = ''
+
+      public constructor() {
+        const loadDelay = loadDelays.shift() as number
+        setTimeout(() => {
+          this.onload?.()
+        }, loadDelay)
+      }
+    } as unknown as typeof Image
+
+    const controller = new AbortController()
+    const onError = vi.fn()
+    const onProgress = vi.fn()
+    const loading = preloadImages(['valid-fast.jpg', 'valid-slow.jpg'], {
+      onError,
+      onProgress,
+      signal: controller.signal,
+    })
+
+    setTimeout(() => {
+      controller.abort()
+    }, 10)
+
+    const images = await loading
+
+    await new Promise(resolve => {
+      setTimeout(resolve, 40)
+    })
+
+    expect(images).toHaveLength(1)
+    expect(images[0].src).toContain('valid-fast.jpg')
+    expect(onProgress).toHaveBeenCalledOnce()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'AbortError' }),
+      expect.stringContaining('valid-slow.jpg'),
+    )
+  })
 })

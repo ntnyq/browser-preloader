@@ -43,6 +43,11 @@ export interface PreloadImagesOptions {
   maxConcurrent?: number
 
   /**
+   * Signal for canceling pending image loads
+   */
+  signal?: AbortSignal
+
+  /**
    * The strategy to load images
    *
    * @default `parallel`
@@ -78,6 +83,12 @@ export interface PreloadImagesOptions {
   onProgress?: (loadedCount: number, totalCount: number) => void
 }
 
+function createAbortError(url: string): Error {
+  const error = new Error(`Image load aborted: ${url}`)
+  error.name = 'AbortError'
+  return error
+}
+
 /**
  * Preload images in browser
  * @param images - Array of image URLs or a single image URL
@@ -98,6 +109,7 @@ export async function preloadImages(
     onComplete,
     onError,
     onProgress,
+    signal,
     strategy = 'parallel',
     timeout = 0,
   } = options
@@ -109,12 +121,24 @@ export async function preloadImages(
 
   let loadedCount = 0
 
+  if (signal?.aborted) {
+    onComplete?.([])
+    return []
+  }
+
   function updateProgress() {
     onProgress?.(loadedCount, urls.length)
   }
 
   async function loadImage(url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        const error = createAbortError(url)
+        onError?.(error, url)
+        reject(error)
+        return
+      }
+
       const image = new Image()
       let isSettled = false
 
@@ -137,18 +161,30 @@ export async function preloadImages(
         image.onerror = null
       }
 
+      function rejectImage(error: Error) {
+        if (isSettled) {
+          return
+        }
+        isSettled = true
+        cleanup()
+        onError?.(error, url)
+        reject(error)
+      }
+
+      signal?.addEventListener(
+        'abort',
+        () => {
+          rejectImage(createAbortError(url))
+        },
+        { once: true },
+      )
+
       if (safeTimeout > 0) {
         timer = setTimeout(() => {
-          if (isSettled) {
-            return
-          }
-          isSettled = true
           const error = new Error(
             `Image load timeout after ${safeTimeout}ms: ${url}`,
           )
-          cleanup()
-          onError?.(error, url)
-          reject(error)
+          rejectImage(error)
         }, safeTimeout)
       }
 
@@ -164,14 +200,8 @@ export async function preloadImages(
       }
 
       image.onerror = () => {
-        if (isSettled) {
-          return
-        }
-        isSettled = true
-        cleanup()
         const error = new Error(`Failed to load image: ${url}`)
-        onError?.(error, url)
-        reject(error)
+        rejectImage(error)
       }
 
       image.src = url
