@@ -83,7 +83,7 @@ export async function preloadImages(
 
       // oxlint-disable-next-line init-declarations
       let timer: ReturnType<typeof setTimeout> | undefined
-
+      const handlers: { abortImage?: () => void } = {}
       function clearTimer() {
         if (timer !== undefined) {
           clearTimeout(timer)
@@ -92,6 +92,9 @@ export async function preloadImages(
 
       function cleanup() {
         clearTimer()
+        if (handlers.abortImage !== undefined) {
+          signal?.removeEventListener('abort', handlers.abortImage)
+        }
         image.onload = null
         image.onerror = null
       }
@@ -106,13 +109,10 @@ export async function preloadImages(
         reject(error)
       }
 
-      signal?.addEventListener(
-        'abort',
-        () => {
-          rejectImage(createAbortError(url))
-        },
-        { once: true },
-      )
+      handlers.abortImage = () => {
+        rejectImage(createAbortError(url))
+      }
+      signal?.addEventListener('abort', handlers.abortImage, { once: true })
 
       if (safeTimeout > 0) {
         timer = setTimeout(() => {
@@ -208,7 +208,20 @@ export async function preloadImagesSettled(
   images: Arrayable<string>,
   options: PreloadImagesOptions = {},
 ): Promise<PreloadImagesSettledResult> {
+  const urls = toArray(images)
   const failed: PreloadImageFailure[] = []
+
+  if (options.signal?.aborted) {
+    for (const url of urls) {
+      const error = createAbortError(url)
+      failed.push({ error, url })
+      options.onError?.(error, url)
+    }
+
+    options.onComplete?.([])
+    return { failed, loaded: [] }
+  }
+
   const loaded = await preloadImages(images, {
     ...options,
     onError(error, url) {

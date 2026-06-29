@@ -313,6 +313,23 @@ describe(preloadImages, () => {
     expect(onComplete).toHaveBeenCalledWith([])
   })
 
+  it('removes abort listener after image load settles', async () => {
+    const controller = new AbortController()
+    const removeEventListener = vi.spyOn(
+      controller.signal,
+      'removeEventListener',
+    )
+
+    await preloadImages(['valid.jpg'], {
+      signal: controller.signal,
+    })
+
+    expect(removeEventListener).toHaveBeenCalledWith(
+      'abort',
+      expect.any(Function),
+    )
+  })
+
   it('returns loaded images and reports pending images when aborted', async () => {
     const loadDelays = [5, 30]
 
@@ -401,5 +418,42 @@ describe(preloadImagesSettled, () => {
     expect(result.failed[0].url).toBe('error.jpg')
     expect(result.failed[0].error).toBeInstanceOf(Error)
     expect(onError).toHaveBeenCalledOnce()
+  })
+
+  it('returns aborted failures when signal is already aborted', async () => {
+    const controller = new AbortController()
+    controller.abort()
+
+    const onComplete = vi.fn()
+    const onError = vi.fn()
+    const result = await preloadImagesSettled(['a.jpg', 'b.jpg'], {
+      onComplete,
+      onError,
+      signal: controller.signal,
+    })
+
+    expect(result).toMatchObject({
+      failed: [
+        {
+          error: expect.objectContaining({ name: 'AbortError' }),
+          url: 'a.jpg',
+        },
+        {
+          error: expect.objectContaining({ name: 'AbortError' }),
+          url: 'b.jpg',
+        },
+      ],
+      loaded: [],
+    })
+    expect(onError).toHaveBeenCalledTimes(2)
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'AbortError' }),
+      'a.jpg',
+    )
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'AbortError' }),
+      'b.jpg',
+    )
+    expect(onComplete).toHaveBeenCalledWith([])
   })
 })
