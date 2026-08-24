@@ -4,8 +4,8 @@ import { preloadImages, preloadImagesSettled } from '../src'
 describe(preloadImages, () => {
   // oxlint-disable-next-line init-declarations
   let originalImage: typeof Image,
-  // oxlint-disable-next-line init-declarations
-   originalRequestIdleCallback: typeof requestIdleCallback
+    // oxlint-disable-next-line init-declarations
+    originalRequestIdleCallback: typeof requestIdleCallback
 
   beforeEach(() => {
     originalImage = global.Image
@@ -82,7 +82,7 @@ describe(preloadImages, () => {
 
   it('options - onError', async () => {
     const onError = vi.fn(),
-     loaded = await preloadImages(['valid.jpg', 'error.jpg'], { onError })
+      loaded = await preloadImages(['valid.jpg', 'error.jpg'], { onError })
 
     expect(loaded).toHaveLength(1)
     expect(loaded[0].src).toContain('valid.jpg')
@@ -93,10 +93,10 @@ describe(preloadImages, () => {
 
   it('options - timeout', async () => {
     const onError = vi.fn(),
-     images = await preloadImages(['timeout.jpg'], {
-      onError,
-      timeout: 20,
-    })
+      images = await preloadImages(['timeout.jpg'], {
+        onError,
+        timeout: 20,
+      })
 
     expect(images).toHaveLength(0)
     expect(onError).toHaveBeenCalledOnce()
@@ -118,12 +118,12 @@ describe(preloadImages, () => {
     } as unknown as typeof Image
 
     const onError = vi.fn(),
-     onProgress = vi.fn(),
-     images = await preloadImages(['late.jpg'], {
-      onError,
-      onProgress,
-      timeout: 5,
-    })
+      onProgress = vi.fn(),
+      images = await preloadImages(['late.jpg'], {
+        onError,
+        onProgress,
+        timeout: 5,
+      })
 
     await new Promise(resolve => {
       setTimeout(resolve, 30)
@@ -165,7 +165,7 @@ describe(preloadImages, () => {
 
   it('options - maxConcurrent', async () => {
     const onProgress = vi.fn(),
-     startTime = Date.now()
+      startTime = Date.now()
 
     await preloadImages(
       [
@@ -303,10 +303,10 @@ describe(preloadImages, () => {
     } as unknown as typeof Image
 
     const onComplete = vi.fn(),
-     images = await preloadImages(['valid.jpg'], {
-      onComplete,
-      signal: controller.signal,
-    })
+      images = await preloadImages(['valid.jpg'], {
+        onComplete,
+        signal: controller.signal,
+      })
 
     expect(images).toHaveLength(0)
     expect(imageCount).toBe(0)
@@ -315,10 +315,7 @@ describe(preloadImages, () => {
 
   it('removes abort listener after image load settles', async () => {
     const controller = new AbortController(),
-     removeEventListener = vi.spyOn(
-      controller.signal,
-      'removeEventListener',
-    )
+      removeEventListener = vi.spyOn(controller.signal, 'removeEventListener')
 
     await preloadImages(['valid.jpg'], {
       signal: controller.signal,
@@ -348,13 +345,13 @@ describe(preloadImages, () => {
     } as unknown as typeof Image
 
     const controller = new AbortController(),
-     onError = vi.fn(),
-     onProgress = vi.fn(),
-     loading = preloadImages(['valid-fast.jpg', 'valid-slow.jpg'], {
-      onError,
-      onProgress,
-      signal: controller.signal,
-    })
+      onError = vi.fn(),
+      onProgress = vi.fn(),
+      loading = preloadImages(['valid-fast.jpg', 'valid-slow.jpg'], {
+        onError,
+        onProgress,
+        signal: controller.signal,
+      })
 
     setTimeout(() => {
       controller.abort()
@@ -409,9 +406,9 @@ describe(preloadImagesSettled, () => {
 
   it('returns loaded images and failed image details', async () => {
     const onError = vi.fn(),
-     result = await preloadImagesSettled(['valid.jpg', 'error.jpg'], {
-      onError,
-    })
+      result = await preloadImagesSettled(['valid.jpg', 'error.jpg'], {
+        onError,
+      })
 
     expect(result.loaded).toHaveLength(1)
     expect(result.failed).toHaveLength(1)
@@ -425,12 +422,12 @@ describe(preloadImagesSettled, () => {
     controller.abort()
 
     const onComplete = vi.fn(),
-     onError = vi.fn(),
-     result = await preloadImagesSettled(['a.jpg', 'b.jpg'], {
-      onComplete,
-      onError,
-      signal: controller.signal,
-    })
+      onError = vi.fn(),
+      result = await preloadImagesSettled(['a.jpg', 'b.jpg'], {
+        onComplete,
+        onError,
+        signal: controller.signal,
+      })
 
     expect(result).toMatchObject({
       failed: [

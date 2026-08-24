@@ -23,27 +23,27 @@ export async function preloadImages(
   options: PreloadImagesOptions = {},
 ): Promise<HTMLImageElement[]> {
   const urls = toArray(images),
-   {
-    crossOrigin = false,
-    crossOriginAttribute = 'anonymous',
-    decoding,
-    fetchPriority,
-    idleTimeout = 2000,
-    loadOnIdle = false,
-    maxConcurrent = 6,
-    onComplete,
-    onError,
-    onProgress,
-    referrerPolicy,
-    signal,
-    strategy = 'parallel',
-    timeout = 0,
-  } = options,
-   safeMaxConcurrent =
-    Number.isFinite(maxConcurrent) && maxConcurrent > 0
-      ? Math.max(1, Math.floor(maxConcurrent))
-      : 1,
-   safeTimeout = Number.isFinite(timeout) && timeout > 0 ? timeout : 0
+    {
+      crossOrigin = false,
+      crossOriginAttribute = 'anonymous',
+      decoding,
+      fetchPriority,
+      idleTimeout = 2000,
+      loadOnIdle = false,
+      maxConcurrent = 6,
+      onComplete,
+      onError,
+      onProgress,
+      referrerPolicy,
+      signal,
+      strategy = 'parallel',
+      timeout = 0,
+    } = options,
+    safeMaxConcurrent =
+      Number.isFinite(maxConcurrent) && maxConcurrent > 0
+        ? Math.max(1, Math.floor(maxConcurrent))
+        : 1,
+    safeTimeout = Number.isFinite(timeout) && timeout > 0 ? timeout : 0
 
   let loadedCount = 0
 
@@ -164,7 +164,7 @@ export async function preloadImages(
 
   async function loadParallel(): Promise<HTMLImageElement[]> {
     const batches: string[][] = [],
-     results: HTMLImageElement[] = []
+      results: HTMLImageElement[] = []
 
     for (let i = 0; i < urls.length; i += safeMaxConcurrent) {
       const batch = urls.slice(i, i + safeMaxConcurrent)
@@ -209,7 +209,7 @@ export async function preloadImagesSettled(
   options: PreloadImagesOptions = {},
 ): Promise<PreloadImagesSettledResult> {
   const urls = toArray(images),
-   failed: PreloadImageFailure[] = []
+    failed: PreloadImageFailure[] = []
 
   if (options.signal?.aborted) {
     for (const url of urls) {
