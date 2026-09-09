@@ -123,6 +123,8 @@ Options for preloading images, see `PreloadImagesOptions` in [Interfaces](#inter
 - Use `preloadImagesSettled` when you need `{ loaded, failed }`.
 - `maxConcurrent` only affects `strategy: 'parallel'`; sequential loading always processes one image at a time.
 - `signal` cancels pending image loads. Already loaded images remain in the returned result.
+- Cancellation also ends queued idle waits. Remaining URLs are reported as aborted without scheduling further idle callbacks.
+- Synchronous exceptions from `onProgress` or `onError` during image events or timeouts do not prevent image loading from settling. They still propagate from the event or timeout callback and are not converted into image failures. Exceptions from `onComplete` reject the returned promise.
 
 ## Interfaces
 
@@ -200,6 +202,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Callback function to be called when an error occurs
+   * Exceptions from this callback do not prevent an active image from settling
    * @param error - Error object
    * @param url - The URL of the image that failed to load
    */
@@ -207,6 +210,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Callback function to be called when the progress of image loading changes
+   * Exceptions from this callback do not prevent an active image from settling
    *
    * @param loadedCount - Number of images loaded so far
    * @param totalCount - Total number of images to be loaded
@@ -220,6 +224,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Signal for canceling pending image loads
+   * Also cancels queued idle waits
    */
   signal?: AbortSignal
 }

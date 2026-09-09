@@ -105,8 +105,9 @@ export async function preloadImages(
         }
         isSettled = true
         cleanup()
-        onError?.(error, url)
+        // Settle before user callbacks so thrown exceptions cannot stall loading.
         reject(error)
+        onError?.(error, url)
       }
 
       handlers.abortImage = () => {
@@ -130,8 +131,8 @@ export async function preloadImages(
         isSettled = true
         cleanup()
         loadedCount++
-        updateProgress()
         resolve(image)
+        updateProgress()
       }
 
       image.onerror = () => {
@@ -146,6 +147,7 @@ export async function preloadImages(
   async function loadWithIdle<T>(task: () => Promise<T>): Promise<T> {
     if (
       !loadOnIdle ||
+      signal?.aborted ||
       typeof window === 'undefined' ||
       window.requestIdleCallback === undefined
     ) {
@@ -153,12 +155,31 @@ export async function preloadImages(
     }
 
     return new Promise((resolve, reject) => {
-      window.requestIdleCallback(
-        () => {
-          task().then(resolve).catch(reject)
-        },
-        { timeout: idleTimeout },
-      )
+      let isStarted = false
+      const handlers: { abortIdle?: () => void } = {}
+
+      function startTask() {
+        if (isStarted) {
+          return
+        }
+        isStarted = true
+        if (handlers.abortIdle !== undefined) {
+          signal?.removeEventListener('abort', handlers.abortIdle)
+        }
+        task().then(resolve).catch(reject)
+      }
+
+      const idleHandle = window.requestIdleCallback(startTask, {
+        timeout: idleTimeout,
+      })
+
+      handlers.abortIdle = () => {
+        window.cancelIdleCallback?.(idleHandle)
+        // loadImage reports aborted URLs without starting their image requests.
+        startTask()
+      }
+
+      signal?.addEventListener('abort', handlers.abortIdle, { once: true })
     })
   }
 

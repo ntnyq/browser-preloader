@@ -48,6 +48,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Signal for canceling pending image loads
+   * Also cancels queued idle waits
    */
   signal?: AbortSignal
 
@@ -73,6 +74,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Callback function to be called when an error occurs
+   * Exceptions from this callback do not prevent an active image from settling
    * @param error - Error object
    * @param url - The URL of the image that failed to load
    */
@@ -80,6 +82,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Callback function to be called when the progress of image loading changes
+   * Exceptions from this callback do not prevent an active image from settling
    *
    * @param loadedCount - Number of images loaded so far
    * @param totalCount - Total number of images to be loaded

@@ -4,12 +4,10 @@ import { preloadImages, preloadImagesSettled } from '../src'
 describe(preloadImages, () => {
   // oxlint-disable-next-line init-declarations
   let originalImage: typeof Image
-  // oxlint-disable-next-line init-declarations
-  let originalRequestIdleCallback: typeof requestIdleCallback
 
   beforeEach(() => {
     originalImage = global.Image
-    originalRequestIdleCallback = global.requestIdleCallback
+    vi.stubGlobal('window', globalThis)
 
     global.Image = class MockImage {
       public crossOrigin = ''
@@ -31,25 +29,26 @@ describe(preloadImages, () => {
     } as unknown as typeof Image
 
     // Mock requestIdleCallback
-    global.requestIdleCallback = ((
-      callback: IdleRequestCallback,
-      _options?: IdleRequestOptions,
-    ) => {
-      const timeoutId = setTimeout(() => {
-        callback({
-          didTimeout: false,
-          timeRemaining: () => 50,
-        } as IdleDeadline)
-      }, 5)
-      return timeoutId as unknown as number
-    }) as typeof requestIdleCallback
+    vi.stubGlobal(
+      'requestIdleCallback',
+      vi.fn((callback: IdleRequestCallback, _options?: IdleRequestOptions) => {
+        const timeoutId = setTimeout(() => {
+          callback({
+            didTimeout: false,
+            timeRemaining: () => 50,
+          } as IdleDeadline)
+        }, 5)
+        return timeoutId as unknown as number
+      }),
+    )
 
     vi.restoreAllMocks()
   })
 
   afterEach(() => {
     global.Image = originalImage
-    global.requestIdleCallback = originalRequestIdleCallback
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it('single image', async () => {
@@ -230,6 +229,10 @@ describe(preloadImages, () => {
     expect(loaded).toHaveLength(2)
     expect(loaded[0].src).toContain('valid1.jpg')
     expect(loaded[1].src).toContain('valid2.jpg')
+    expect(global.requestIdleCallback).toHaveBeenCalledExactlyOnceWith(
+      expect.any(Function),
+      { timeout: 1000 },
+    )
   })
 
   it('options - loadOnIdle (without requestIdleCallback)', async () => {
@@ -254,6 +257,7 @@ describe(preloadImages, () => {
     expect(loaded).toHaveLength(2)
     expect(loaded[0].src).toBe('valid1.jpg')
     expect(loaded[1].src).toBe('valid2.jpg')
+    expect(global.requestIdleCallback).toHaveBeenCalledTimes(2)
   })
 
   it('options - loadOnIdle with parallel strategy', async () => {
@@ -267,6 +271,7 @@ describe(preloadImages, () => {
     )
 
     expect(loaded).toHaveLength(4)
+    expect(global.requestIdleCallback).toHaveBeenCalledTimes(2)
   })
 
   it('options - loadOnIdle with onProgress callback', async () => {
