@@ -125,6 +125,7 @@
         "ignoreDefaultValues": true,
       },
     ],
+    "one-var": ["warn", "never"],
   },
   "overrides": [
     {

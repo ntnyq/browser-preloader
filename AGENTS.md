@@ -2,33 +2,30 @@
 
 ## Project Structure & Module Organization
 
-This repository is a small TypeScript browser utility package. Public exports start at `src/index.ts`; the main implementation lives in `src/preloadImages.ts`. Tests are in `tests/`, currently `tests/preloadImages.test.ts`. Build and test configuration is kept at the root: `tsdown.config.ts`, `vitest.config.ts`, `tsconfig.json`, `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml`. Published artifacts are generated into `dist/` and should not be edited by hand.
+`browser-preloader` is a TypeScript ES module package for preloading browser images. `src/index.ts` exposes the public API, `src/preloadImages.ts` implements loading, and `src/types.ts` defines shared interfaces. Tests live in `tests/preloadImages.test.ts` and mock image URLs; no asset directory is required. Root configuration files control TypeScript, tsdown, Vitest, Oxlint, and Oxfmt. Generated JavaScript and declarations go into `dist/`; do not edit them manually.
 
 ## Build, Test, and Development Commands
 
-Use `pnpm` for all package tasks.
+Use the pnpm version pinned in `package.json` and Node LTS as specified by `.node-version`.
 
-- `pnpm install --frozen-lockfile`: install dependencies exactly from `pnpm-lock.yaml`.
-- `pnpm run build`: build the package with `tsdown`.
-- `pnpm run dev`: run `tsdown` in watch mode.
-- `pnpm run test`: run the Vitest suite once.
-- `pnpm run typecheck`: run `tsgo --noEmit`.
-- `pnpm run lint`: run Oxlint.
-- `pnpm run format:check`: check formatting with Oxfmt.
-- `pnpm run release:check`: run format, lint, typecheck, and tests together.
+- `pnpm install --frozen-lockfile`: install the locked dependencies.
+- `pnpm run dev`: rebuild with tsdown in watch mode.
+- `pnpm run build`: generate the browser package and type declarations.
+- `pnpm run test`: run Vitest once; watch mode is disabled in configuration.
+- `pnpm typecheck`: check types with `tsc --noEmit`.
+- `pnpm run lint`: check code with Oxlint.
+- `pnpm run format`: apply Oxfmt formatting.
+- `pnpm run format:check`: check formatting without writing files.
+- `pnpm run release:check`: run formatting checks, lint, type checks, and tests.
 
 ## Coding Style & Naming Conventions
 
-Write TypeScript as ES modules and keep browser-specific code inside `src/`. Follow the existing strict TypeScript style: explicit exported types, narrow option unions, and no unnecessary runtime abstractions. Use camelCase for functions and variables, PascalCase for interfaces and exported types, and descriptive option names such as `loadOnIdle` or `maxConcurrent`. Formatting is enforced by Oxfmt and linting by Oxlint; run `pnpm run release:check` before submitting changes.
+Use strict TypeScript, ES module syntax, and separate `import type` declarations. Follow two-space indentation, LF endings, single quotes, no semicolons, trailing commas, and an 80-column formatting target. Use camelCase for functions, variables, and implementation filenames, such as `preloadImages.ts`; use PascalCase for interfaces and types. Document public options with JSDoc and update `README.md` when API behavior changes. Husky runs nano-staged before commits to fix lint and formatting on staged files.
 
 ## Testing Guidelines
 
-Vitest is the test framework. Place tests in `tests/` and name files `*.test.ts`. Prefer behavior-focused test names that describe the observable result, especially for browser APIs such as `Image`, timers, and callbacks. Add or update tests for changes to loading strategy, timeout handling, callback behavior, and error handling.
+Name test files `tests/*.test.ts` and use descriptive, behavior-focused `it` titles. Mock browser APIs such as `Image` and `requestIdleCallback`, and restore modified globals after tests. Cover success, failure, timeouts, cancellation, callbacks, and concurrency when changing those behaviors. No coverage threshold is configured. Run `pnpm run release:check` and `pnpm run build` before submitting; CI also builds and tests across Linux, Windows, and macOS.
 
 ## Commit & Pull Request Guidelines
 
-The history uses concise Conventional Commit-style messages, especially `chore: ...` and `chore(deps): ...`. Use focused commits such as `fix: handle empty image list` or `test: cover timeout cleanup`. Pull requests should include a short summary, linked issue when available, and the verification commands run. For dependency updates, call out lockfile changes and any runtime or toolchain impact.
-
-## Security & Configuration Tips
-
-Keep package-manager settings in `pnpm-workspace.yaml`. Do not commit credentials, registry tokens, generated caches, or local environment files. This package runs in browsers, so avoid unsafe HTML injection and keep external resource handling explicit.
+Follow the history's Conventional Commit style: `feat:`, `fix:`, `docs:`, and `chore(deps):`, followed by a concise description. Keep commits focused. Pull requests should explain the behavior change, link relevant issues, and list verification commands and results. Include updated API examples where applicable and commit lockfile changes with dependency updates.
