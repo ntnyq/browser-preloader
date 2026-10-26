@@ -5,7 +5,11 @@ export default defineConfig({
   deps: {
     onlyBundle: ['@ntnyq/utils'],
   },
-  dts: true,
+  dts: {
+    compilerOptions: {
+      isolatedDeclarations: true,
+    },
+  },
   entry: ['src/index.ts'],
   minify: 'dce-only',
   platform: 'browser',

@@ -122,7 +122,10 @@ Options for preloading images, see `PreloadImagesOptions` in [Interfaces](#inter
 - Failed, timed out, or aborted images are omitted from `preloadImages` results.
 - Use `preloadImagesSettled` when you need `{ loaded, failed }`.
 - `maxConcurrent` only affects `strategy: 'parallel'`; sequential loading always processes one image at a time.
+- Parallel loading starts the next queued image as soon as a slot becomes free. Successful images are returned in input order.
+- With `loadOnIdle`, each image waits for an idle callback before starting when `requestIdleCallback` is available.
 - `signal` cancels pending image loads. Already loaded images remain in the returned result.
+- Timed out or aborted image loads clear their image source to stop the browser request.
 - Cancellation also ends queued idle waits. Remaining URLs are reported as aborted without scheduling further idle callbacks.
 - Synchronous exceptions from `onProgress` or `onError` during image events or timeouts do not prevent image loading from settling. They still propagate from the event or timeout callback and are not converted into image failures. Exceptions from `onComplete` reject the returned promise.
 
@@ -168,6 +171,7 @@ export interface PreloadImagesOptions {
   /**
    * Whether to load images only when browser is idle
    * Uses requestIdleCallback API if available
+   * Each image waits for an idle callback before starting
    *
    * @default false
    */
@@ -175,6 +179,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Maximum number of concurrent image loads
+   * A free slot starts the next queued image
    *
    * @default 6
    */

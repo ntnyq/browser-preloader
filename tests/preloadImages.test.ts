@@ -46,9 +46,10 @@ describe(preloadImages, () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
     global.Image = originalImage
     vi.unstubAllGlobals()
-    vi.restoreAllMocks()
   })
 
   it('single image', async () => {
@@ -163,27 +164,49 @@ describe(preloadImages, () => {
   })
 
   it('options - maxConcurrent', async () => {
+    vi.useFakeTimers()
+    const imageConstructor = vi.spyOn(global, 'Image')
     const onProgress = vi.fn()
-    const startTime = Date.now()
+    const urls = [
+      'valid1.jpg',
+      'valid2.jpg',
+      'valid3.jpg',
+      'valid4.jpg',
+      'valid5.jpg',
+      'valid6.jpg',
+    ]
+    const loading = preloadImages(urls, {
+      maxConcurrent: 2,
+      onProgress,
+      strategy: 'parallel',
+    })
 
-    await preloadImages(
-      [
-        'valid1.jpg',
-        'valid2.jpg',
-        'valid3.jpg',
-        'valid4.jpg',
-        'valid5.jpg',
-        'valid6.jpg',
-      ],
-      {
-        maxConcurrent: 2,
-        onProgress,
-        strategy: 'parallel',
-      },
+    function getCounts() {
+      return {
+        started: imageConstructor.mock.calls.length,
+        completed: onProgress.mock.calls.length,
+      }
+    }
+
+    const counts = [getCounts()]
+    for (const duration of [9, 1, 10, 10]) {
+      await vi.advanceTimersByTimeAsync(duration)
+      counts.push(getCounts())
+    }
+
+    const loaded = await loading
+    expect(counts).toStrictEqual([
+      { started: 2, completed: 0 },
+      { started: 2, completed: 0 },
+      { started: 4, completed: 2 },
+      { started: 6, completed: 4 },
+      { started: 6, completed: 6 },
+    ])
+    expect(onProgress.mock.calls).toStrictEqual(
+      urls.map((_, index) => [index + 1, urls.length]),
     )
-
-    const duration = Date.now() - startTime
-    expect(duration).toBeGreaterThanOrEqual(10 * 3)
+    expect(loaded.map(image => image.src)).toStrictEqual(urls)
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it('options - strategy(sequential)', async () => {
@@ -229,7 +252,8 @@ describe(preloadImages, () => {
     expect(loaded).toHaveLength(2)
     expect(loaded[0].src).toContain('valid1.jpg')
     expect(loaded[1].src).toContain('valid2.jpg')
-    expect(global.requestIdleCallback).toHaveBeenCalledExactlyOnceWith(
+    expect(global.requestIdleCallback).toHaveBeenCalledTimes(2)
+    expect(global.requestIdleCallback).toHaveBeenCalledWith(
       expect.any(Function),
       { timeout: 1000 },
     )
@@ -271,7 +295,7 @@ describe(preloadImages, () => {
     )
 
     expect(loaded).toHaveLength(4)
-    expect(global.requestIdleCallback).toHaveBeenCalledTimes(2)
+    expect(global.requestIdleCallback).toHaveBeenCalledTimes(4)
   })
 
   it('options - loadOnIdle with onProgress callback', async () => {

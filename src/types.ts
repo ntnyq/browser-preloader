@@ -34,6 +34,7 @@ export interface PreloadImagesOptions {
   /**
    * Whether to load images only when browser is idle
    * Uses requestIdleCallback API if available
+   * Each image waits for an idle callback before starting
    *
    * @default false
    */
@@ -41,6 +42,7 @@ export interface PreloadImagesOptions {
 
   /**
    * Maximum number of concurrent image loads
+   * A free slot starts the next queued image
    *
    * @default 6
    */

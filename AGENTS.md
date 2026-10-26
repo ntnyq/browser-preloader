@@ -16,7 +16,7 @@ Use the pnpm version pinned in `package.json` and Node LTS as specified by `.nod
 - `pnpm run lint`: check code with Oxlint.
 - `pnpm run format`: apply Oxfmt formatting.
 - `pnpm run format:check`: check formatting without writing files.
-- `pnpm run release:check`: run formatting checks, lint, type checks, and tests.
+- `pnpm run release:check`: run formatting checks, lint, type checks, tests, and build.
 
 ## Coding Style & Naming Conventions
 

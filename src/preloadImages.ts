@@ -105,6 +105,8 @@ export async function preloadImages(
         }
         isSettled = true
         cleanup()
+        // Clearing the source stops the browser request before freeing its slot.
+        image.src = ''
         // Settle before user callbacks so thrown exceptions cannot stall loading.
         reject(error)
         onError?.(error, url)
@@ -184,23 +186,26 @@ export async function preloadImages(
   }
 
   async function loadParallel(): Promise<HTMLImageElement[]> {
-    const batches: string[][] = []
-    const results: HTMLImageElement[] = []
+    const results: (HTMLImageElement | undefined)[] = []
+    let nextIndex = 0
 
-    for (let i = 0; i < urls.length; i += safeMaxConcurrent) {
-      const batch = urls.slice(i, i + safeMaxConcurrent)
-      batches.push(batch)
+    async function loadNext() {
+      while (nextIndex < urls.length) {
+        // Claim the URL before awaiting so workers never load the same entry.
+        const index = nextIndex++
+        await loadWithIdle(async () => {
+          try {
+            results[index] = await loadImage(urls[index])
+          } catch {
+            // Error has been handled in loadImage via onError callback.
+          }
+        })
+      }
     }
 
-    for (const batch of batches) {
-      const batchResults = await loadWithIdle(async () => {
-        const batchPromises = batch.map(url => loadImage(url).catch(() => null))
-        return Promise.all(batchPromises)
-      })
-      results.push(...(batchResults.filter(Boolean) as HTMLImageElement[]))
-    }
-
-    return results
+    const workerCount = Math.min(safeMaxConcurrent, urls.length)
+    await Promise.all(Array.from({ length: workerCount }, () => loadNext()))
+    return results.filter(image => image !== undefined)
   }
 
   async function loadSequential(): Promise<HTMLImageElement[]> {
