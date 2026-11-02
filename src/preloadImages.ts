@@ -13,10 +13,25 @@ function createAbortError(url: string): Error {
 }
 
 /**
- * Preload images in browser
- * @param images - Array of image URLs or a single image URL
- * @param options - Options for preloading images, see {@link PreloadImagesOptions}
- * @returns - Promise that resolves to an array of loaded HTMLImageElement objects
+ * Preloads browser images and returns only the successfully loaded elements
+ *
+ * Failed, timed out, and aborted images are omitted without rejecting the
+ * returned promise. Successful images retain their input order, including
+ * duplicate URLs. Use {@link preloadImagesSettled} to also collect failures.
+ *
+ * If the signal is already aborted, no requests are started and `onComplete`
+ * receives an empty array; `onError` is not called. Aborting during loading
+ * preserves completed images and reports unfinished URLs through `onError`.
+ *
+ * @param images - A single image URL or an array of URLs to load independently
+ * @param options - Loading, scheduling, cancellation, and callback options;
+ * defaults to an empty object, see {@link PreloadImagesOptions}
+ * @returns A promise resolving to successful images in input order, or an empty
+ * array when the input is empty or no images load successfully
+ * @throws {unknown} Rejects with the original exception if `onComplete` throws
+ * or idle callback scheduling throws. Exceptions from `onProgress` or `onError`
+ * during image events, timeouts, or abort events propagate from those callbacks
+ * after the image has settled; they do not reject the returned promise.
  */
 export async function preloadImages(
   images: Arrayable<string>,
@@ -230,6 +245,27 @@ export async function preloadImages(
   return resolvedImages
 }
 
+/**
+ * Preloads browser images and collects successful elements and reported failures
+ *
+ * Uses the loading options and callbacks of {@link preloadImages}. Successful
+ * images retain their input order; failures follow the order in which they are
+ * reported. Load errors, timeouts, and cancellation are collected without
+ * rejecting the returned promise.
+ *
+ * If the signal is already aborted, every URL is recorded as an `AbortError`
+ * failure and passed to `onError`, then `onComplete` receives an empty array.
+ *
+ * @param images - A single image URL or an array of URLs to load independently
+ * @param options - Loading, scheduling, cancellation, and callback options;
+ * defaults to an empty object, see {@link PreloadImagesOptions}
+ * @returns A promise resolving to successful images and reported failures;
+ * both arrays are empty when the input is empty
+ * @throws {unknown} Rejects with the original exception if `onComplete` throws,
+ * idle callback scheduling throws, or `onError` throws while reporting an already
+ * aborted signal. Callback exceptions during active image events, timeouts, or
+ * abort events propagate as described in {@link preloadImages}.
+ */
 export async function preloadImagesSettled(
   images: Arrayable<string>,
   options: PreloadImagesOptions = {},
